@@ -28,6 +28,18 @@
     padding: 10px;
     border-radius: 5px;
   }
+  .editInfoGroup {
+    display: flex;
+    gap: 10px;
+    background: rgba(245, 245, 245, 1);
+    padding: 10px;
+    border-radius: 5px;
+  }
+  .editInput {
+    background: transparent;
+    border: none;
+    outline: none;
+  }
   
   /* Icon styling for each info item */
   .icon {

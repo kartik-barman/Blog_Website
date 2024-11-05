@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   FaHome,
   FaBlog,
@@ -13,12 +13,13 @@ import { FiLogOut } from "react-icons/fi";
 import { MdDashboard } from "react-icons/md";
 import styles from "./NavBar.module.css";
 import { Link } from "react-router-dom";
+import { AuthContext } from "../../store/AuthContext";
 
 const Navbar = () => {
+  const { isLoggedIn, setIsLoggedIn, isAdmin, setIsAdmin } =
+    useContext(AuthContext);
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userType, setUserType] = useState("admin");
 
   useEffect(() => {
     const handleScroll = () => {
@@ -45,7 +46,12 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
-    // Krishna Da , Implement your logout logic here
+    localStorage.removeItem("userId");
+    localStorage.removeItem("username");
+    localStorage.removeItem("email");
+    localStorage.removeItem("phone");
+    localStorage.removeItem("token");
+    localStorage.removeItem("isAdmin");
     setIsLoggedIn(false);
   };
 
@@ -96,7 +102,7 @@ const Navbar = () => {
             {/* Conditional Button Rendering */}
             <div className={styles.authButtons}>
               {isLoggedIn ? (
-                userType === "admin" ? (
+                isAdmin ? (
                   <>
                     <Link
                       to="/dashboard"

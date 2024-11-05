@@ -1,43 +1,63 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import styles from "./BlogDetails.module.css";
 import { FaUserAlt, FaRegCalendarAlt, FaRegCommentAlt } from "react-icons/fa";
 import { useParams } from "react-router-dom";
 
 const BlogDetails = () => {
   const { id } = useParams();
-  console.log(id);
-  const [comments, setComments] = useState([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [commentText, setCommentText] = useState("");
+  const [blogPost, setBlogPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const blogPost = {
-    id: 1,
-    title: "My First Blog Post",
-    content:
-      "Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi sint repellat assumenda praesentium, ipsa perferendis odio asperiores nisi tempore vitae, delectus enim veniam debitis animi quas. Molestias quae natus nisi necessitatibus, dignissimos, cumque laudantium iure voluptatibus, sint aliquam vel voluptas! Nam eveniet reprehenderit alias ducimus porro ad. Corporis nisi, ullam, quos deleniti repudiandae, dolorum iusto iste minima pariatur nulla alias? Praesentium dolorem architecto error rerum quia. At quos laborum sint ratione quasi dicta voluptas quae officia aliquam, ab mollitia odio tempore. Quidem qui nam illum molestias voluptatum possimus repellat dolorem quaerat sequi a repellendus, hic quis esse voluptas quo officia facilis et explicabo facere error recusandae nihil. Porro, tenetur non? Aperiam illum nam nobis veritatis voluptas commodi facere laboriosam dolorem molestias repellendus, at maiores, iusto architecto labore debitis quis est. Impedit aliquid sint libero illum excepturi itaque recusandae veritatis nam animi vero. Saepe nihil fugiat nam ab blanditiis minus quae laudantium laboriosam quaerat maxime.",
-    image:
-      "https://res.cloudinary.com/dewwngmuf/image/upload/v1730493114/dhtu4a1dvusglybhxxav.png",
-    author: "Kartik Barman",
-    publishedDate: "2024-10-01",
+  const fetchPost = async () => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/blogs/${id}`);
+      setBlogPost(response.data.blog);
+    } catch (error) {
+      setError("Failed to load blog post");
+    } finally {
+      setLoading(false);
+    }
   };
+  useEffect(() => {
 
-  const handleCommentSubmit = (e) => {
+    fetchPost();
+  }, [id]);
+
+  const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (name && email && commentText) {
       const newComment = {
-        id: comments.length + 1,
-        author: name,
-        email,
-        text: commentText,
-        timestamp: new Date().toLocaleString(),
+        username: name,
+        message: commentText,
+        createdAt: new Date().toISOString(),
       };
-      setComments([...comments, newComment]);
+
+      const response = await axios.post(`http://localhost:5000/api/blogs/comment/${blogPost._id}`, newComment);
+      console.log(response);
+      fetchPost();
+      // Update the blog post with the new comment
+      setBlogPost((prevPost) => ({
+        ...prevPost,
+        comments: [...prevPost.comments, newComment],
+      }));
+
+      // Reset form fields
       setName("");
       setEmail("");
       setCommentText("");
+    } else {
+      alert("Please fill in all fields");
     }
   };
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>{error}</p>;
+  if (!blogPost) return <p>Blog post not found.</p>;
 
   return (
     <div className="container py-5 mt-5">
@@ -45,7 +65,7 @@ const BlogDetails = () => {
         {/* Hero Section */}
         <div className={styles.heroSection}>
           <img
-            src={blogPost.image}
+            src={blogPost.banner}
             className={styles.bannerImage}
             alt={blogPost.title}
           />
@@ -60,7 +80,7 @@ const BlogDetails = () => {
               </div>
               <div className="d-flex align-items-center">
                 <FaRegCalendarAlt className="me-2" size={16} />
-                <span>{blogPost.publishedDate}</span>
+                <span>{new Date(blogPost.createdAt).toLocaleDateString()}</span>
               </div>
             </div>
           </div>
@@ -76,12 +96,12 @@ const BlogDetails = () => {
               <div className="mt-5">
                 <div className="d-flex align-items-center mb-4">
                   <FaRegCommentAlt size={20} className="me-2" />
-                  <h2 className="h4 mb-0">Comments ({comments.length})</h2>
+                  <h2 className="h4 mb-0">Comments ({blogPost.comments.length})</h2>
                 </div>
 
                 {/* Comments List */}
                 <div className={styles.commentsSection}>
-                  {comments.length === 0 ? (
+                  {blogPost.comments.length === 0 ? (
                     <div className={styles.emptyComments}>
                       <FaRegCommentAlt size={32} className="text-muted mb-2" />
                       <p className="text-muted mb-0">
@@ -89,18 +109,18 @@ const BlogDetails = () => {
                       </p>
                     </div>
                   ) : (
-                    comments.map((comment) => (
-                      <div key={comment.id} className={styles.commentCard}>
+                    blogPost.comments.map((comment, index) => (
+                      <div key={index} className={styles.commentCard}>
                         <div className="d-flex">
                           <div className={styles.commentAvatar}>
-                            {comment.author[0].toUpperCase()}
+                            {comment.username[0].toUpperCase()}
                           </div>
                           <div className="ms-3 flex-grow-1">
-                            <div className="fw-bold">{comment.author}</div>
+                            <div className="fw-bold">{comment.username}</div>
                             <small className="text-muted">
-                              {comment.timestamp}
+                              {new Date(comment.createdAt).toLocaleString()}
                             </small>
-                            <p className="mt-2 mb-0">{comment.text}</p>
+                            <p className="mt-2 mb-0">{comment.message}</p>
                           </div>
                         </div>
                       </div>

@@ -1,9 +1,14 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
+import axios from "axios"
 import styles from "./SignIn.module.css";
 import { FaEnvelope, FaLock } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { AuthContext } from "../../../store/AuthContext";
 
 const SignIn = () => {
+  const {isLoggedIn, setIsLoggedIn, setIsAdmin} = useContext(AuthContext);
+  console.log(isLoggedIn);
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -17,11 +22,39 @@ const SignIn = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission logic here
-    console.log(formData);
+    
+    try {
+      const response = await axios.post("http://localhost:5000/api/users/login", formData);
+      const result = response.data;
+      const {success, message , user, token} = result;
+      if (success) {
+        setIsLoggedIn(true)
+        setIsAdmin(user.isAdmin)
+        console.log("Login successful:", result);
+        localStorage.setItem("userId", user.id);
+        localStorage.setItem("username", user.username);
+        localStorage.setItem("email", user.email);
+        localStorage.setItem("phone", user.phone);
+        localStorage.setItem("token", token);
+        localStorage.setItem("isAdmin", user.isAdmin)
+        navigate("/")
+
+      } else {
+        console.log("Login failed:", result.message);
+      }
+    } catch (error) {
+      if (error.response) {
+        console.error("Error response:", error.response.data);
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+      } else {
+        console.error("Error during login:", error.message);
+      }
+    }
   };
+  
 
   return (
     <div className="d-flex justify-content-center align-items-center min-vh-100">

@@ -1,12 +1,15 @@
 import React, { useState } from "react";
+import axios from "axios"
 import styles from "./SignUp.module.css";
-import { FaUser, FaEnvelope, FaLock } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { FaUser, FaEnvelope, FaLock, FaPhoneAlt } from "react-icons/fa";
+import { Link, useNavigate } from "react-router-dom";
 
 const SignUp = () => {
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
-    name: "",
+    username: "",
     email: "",
+    phone : "",
     password: "",
   });
 
@@ -18,10 +21,18 @@ const SignUp = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
-    // Handle form submission logic here
+    const res = await axios.post("http://localhost:5000/api/users/register", formData);
+    const result = res.data;
+    console.log(result);
     console.log(formData);
+    navigate("/signin")
+    setFormData({
+      username : "",
+      email : "",
+      password : ""
+    })
   };
 
   return (
@@ -33,7 +44,7 @@ const SignUp = () => {
             <FaUser className={styles.icon} />
             <input
               type="text"
-              name="name"
+              name="username"
               placeholder="Full Name"
               value={formData.name}
               onChange={handleChange}
@@ -48,6 +59,18 @@ const SignUp = () => {
               name="email"
               placeholder="Email Address"
               value={formData.email}
+              onChange={handleChange}
+              className={styles.input}
+              required
+            />
+          </div>
+          <div className={`mb-3 ${styles.inputGroup}`}>
+            <FaPhoneAlt className={styles.icon} />
+            <input
+              type="number"
+              name="phone"
+              placeholder="Mobile Number"
+              value={formData.phone}
               onChange={handleChange}
               className={styles.input}
               required
